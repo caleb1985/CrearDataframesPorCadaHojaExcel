@@ -1,0 +1,99 @@
+---
+title: "Crear dataframes por cada hoja Excel"
+author: "Caleb Terrel Orellana, *caleb.terrel@gmail.com*"
+output: html_notebook
+---
+
+## Contexto
+
+![](D:/Cursos/Analytics_Solutions/CrearDataframesPorCadaHojaExcel/img/img3.png){width='100px'}
+
+* Se tienen varios archivos excel, de los cuales se desea leer 
+cada hoja como un dataframe distinto, considerando nombres con sufijos consecutivos
+
+<p align="center">
+![](D:/Cursos/Analytics_Solutions/CrearDataframesPorCadaHojaExcel/img/archivos.png)
+</p>
+
+
+<p align="center">
+![](D:/Cursos/Analytics_Solutions/CrearDataframesPorCadaHojaExcel/img/hojas.png){width='300px'}
+</p>
+
+* Podría servir para un proceso de análisis o preparación de datos
+<p align="center">
+![](D:/Cursos/Analytics_Solutions/CrearDataframesPorCadaHojaExcel/img/oh-yeah-dance.gif){width='300px'}
+</p>
+
+
+```{r setup, include=FALSE, echo=FALSE}
+require("knitr")
+opts_knit$set(root.dir = "D:/Cursos/Analytics_Solutions/CrearDataframesPorCadaHojaExcel/data")
+```
+
+```{r}
+# No hay ningun objeto creado
+ls()
+```
+### Se crea un vector caracter con los nombres de los archivos Excel
+```{r}
+file.list = list.files(pattern = '*.xlsx')
+file.list
+```
+
+### Ejemplo de leer la 1ra hoja del 1er archivo Excel
+
+```{r}
+library(readxl)
+head(read_excel(file.list[1],sheet = 1), 5)
+```
+
+### Ejemplo de obtener los nombres de las hojas del 1er archivo Excel
+
+```{r}
+excel_sheets(file.list[1])
+```
+
+### Ejemplo de leer la 2da hoja del 1er archivo Excel
+
+```{r}
+head(read_excel(file.list[1],sheet = 2), 5)
+```
+
+### Bucle que creará dataframes por cada hoja Excel 🤓
+
+```{r}
+
+# bucle q seleccionara cada archivo excel
+for(i in 1:length(file.list)){
+  # crea un lista y cada elemento es un dataframe de cada hoja del archivo excel
+  sheet_list = lapply(excel_sheets(file.list[i]), read_excel, path=file.list[i]) 
+  # bucle que seleccionara cada elemento de la lista
+  for (j in 1:(length(sheet_list))){
+    # se crean distintos dataframes por cada elemento de la lista
+    # cada elemento tendra un nombre consecutivo:
+    # 1ro se obtiene el nombre del archivo quitando la extension .xslx (nchar, substr)
+    # ejemplo: de "TIENDA_A.xlsx" a "TIENDA_A"
+    # 2do se adiciona un sufijo consecutivo _#
+    # ejemplo: "TIENDA_A_1" (paste)
+    # 3ro se asignan los nombres consecutivos a cada elemento de la lista
+    #     creando asi distintos dataframes con nombres consecutivos
+    # ejemplo: TIENDA_A_1, TIENDA_A_2, etc...
+    sheet_list[[j]] = assign(paste(substr(file.list[i],1,(nchar(file.list[i])-5)), 
+                                   j, sep = "_"), sheet_list[[j]]) 
+    
+  }
+}
+
+```
+
+```{r}
+# Se observa los dataframes creados
+ls()
+```
+
+
+```{r}
+head(TIENDA_A_1, 5)
+head(TIENDA_A_2, 5)
+```
